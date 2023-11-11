@@ -28,6 +28,13 @@ async function run() {
         // Send a ping to confirm a successful connection
         const foodsCollection = client.db('restaurantManagement').collection('foods');
 
+        app.get('/foods', async(req, res) => {
+            const cursor = foodsCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+
         app.post('/foods', async(req, res) => {
             const food = req.body;
             const result = await foodsCollection.insertOne(food)
