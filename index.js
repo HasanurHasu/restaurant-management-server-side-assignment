@@ -34,6 +34,17 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/allFoots', async(req, res) => {
+            const page = parseInt(req.query.page);
+            const size = parseInt(req.query.size);
+            
+            const result = await foodsCollection.find()
+            .skip(page * size)
+            .limit(size)
+            .toArray();
+            res.send(result)
+        })
+
         app.get('/foodsCount', async(req, res) => {
             const count = await foodsCollection.estimatedDocumentCount();
             res.send({count})
