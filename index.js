@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const app = express();
 const port = process.env.PORT || 5000;
@@ -28,43 +28,51 @@ async function run() {
         // Send a ping to confirm a successful connection
         const foodsCollection = client.db('restaurantManagement').collection('foods');
 
-        app.get('/addedItems', async(req, res) => {
+        app.get('/addedItems', async (req, res) => {
             let query = {};
-            if(req.query?.email){
-                query = {addBy: req.query.email};
+            if (req.query?.email) {
+                query = { addBy: req.query.email };
             };
             const cursor = foodsCollection.find(query);
             const result = await cursor.toArray();
             res.send(result);
         })
 
-        app.get('/foods', async(req, res) => {
+        app.get('/foods', async (req, res) => {
             const cursor = foodsCollection.find();
             const result = await cursor.toArray();
             res.send(result);
         })
 
-        app.get('/allFoots', async(req, res) => {
+        app.get('/allFoots', async (req, res) => {
             const page = parseInt(req.query.page);
             const size = parseInt(req.query.size);
-            
+
             const result = await foodsCollection.find()
-            .skip(page * size)
-            .limit(size)
-            .toArray();
+                .skip(page * size)
+                .limit(size)
+                .toArray();
             res.send(result)
         })
 
-        app.get('/foodsCount', async(req, res) => {
+        app.get('/foodsCount', async (req, res) => {
             const count = await foodsCollection.estimatedDocumentCount();
-            res.send({count})
+            res.send({ count })
         })
 
 
-        app.post('/foods', async(req, res) => {
+        app.post('/foods', async (req, res) => {
             const food = req.body;
             const result = await foodsCollection.insertOne(food)
             res.send(result)
+        })
+
+        app.delete('/foods/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const query = {_id: new ObjectId(id)};
+            const result = await foodsCollection.deleteOne(query);
+            res.send(result);
         })
 
         await client.db("admin").command({ ping: 1 });
