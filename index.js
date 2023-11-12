@@ -28,6 +28,16 @@ async function run() {
         // Send a ping to confirm a successful connection
         const foodsCollection = client.db('restaurantManagement').collection('foods');
 
+        app.get('/addedItems', async(req, res) => {
+            let query = {};
+            if(req.query?.email){
+                query = {addBy: req.query.email};
+            };
+            const cursor = foodsCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
         app.get('/foods', async(req, res) => {
             const cursor = foodsCollection.find();
             const result = await cursor.toArray();
