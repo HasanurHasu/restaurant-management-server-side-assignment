@@ -28,6 +28,15 @@ async function run() {
         // Send a ping to confirm a successful connection
         const foodsCollection = client.db('restaurantManagement').collection('foods');
 
+        app.get('/updateProducts/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const cursor = foodsCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+
+        })
+
         app.get('/addedItems', async (req, res) => {
             let query = {};
             if (req.query?.email) {
@@ -67,10 +76,31 @@ async function run() {
             res.send(result)
         })
 
+        app.put('/foods/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updateProduct = req.body;
+            const product = {
+                $set: {
+                    name: updateProduct.name,
+                    category: updateProduct.category,
+                    quantity: updateProduct.quantity,
+                    price: updateProduct.price,
+                    description: updateProduct.description,
+                    addBy: updateProduct.addBy,
+                    origin: updateProduct.origin,
+                    image: updateProduct.image
+                }
+            };
+            const result = await foodsCollection.updateOne(filter, product, options);
+            res.send(result);
+        })
+
         app.delete('/foods/:id', async (req, res) => {
             const id = req.params.id;
             console.log(id);
-            const query = {_id: new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const result = await foodsCollection.deleteOne(query);
             res.send(result);
         })
