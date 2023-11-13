@@ -27,6 +27,13 @@ async function run() {
         // await client.connect();
         // Send a ping to confirm a successful connection
         const foodsCollection = client.db('restaurantManagement').collection('foods');
+        const cardCollection = client.db('restaurantManagement').collection('cards');
+
+        app.post('/addToCard', async (req, res) => {
+            const card = req.body;
+            const result = await cardCollection.insertOne(card);
+            res.send(result);
+        })
 
         app.get('/updateProducts/:id', async (req, res) => {
             const id = req.params.id;
