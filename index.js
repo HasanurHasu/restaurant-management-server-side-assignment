@@ -35,6 +35,16 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/myOrder', async (req, res) => {
+            let query = {};
+            if (req.query?.email) {
+                query = { email: req.query.email };
+            };
+            const cursor = cardCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
         app.get('/updateProducts/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -47,12 +57,13 @@ async function run() {
         app.get('/addedItems', async (req, res) => {
             let query = {};
             if (req.query?.email) {
-                query = { addBy: req.query.email };
+                query = { addByEmail: req.query.email };
             };
             const cursor = foodsCollection.find(query);
             const result = await cursor.toArray();
             res.send(result);
         })
+
 
         app.get('/foods', async (req, res) => {
             const cursor = foodsCollection.find();
@@ -95,9 +106,23 @@ async function run() {
                     quantity: updateProduct.quantity,
                     price: updateProduct.price,
                     description: updateProduct.description,
-                    addBy: updateProduct.addBy,
+                    addByEmail: updateProduct.addByEmail,
+                    addByName: updateProduct.addByName,
                     origin: updateProduct.origin,
                     image: updateProduct.image
+                }
+            };
+            const result = await foodsCollection.updateOne(filter, product, options);
+            res.send(result);
+        })
+        app.put('/foodsOrder/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updateProduct = req.body;
+            const product = {
+                $set: {
+                    totalOrder: updateProduct.totalOrder,
                 }
             };
             const result = await foodsCollection.updateOne(filter, product, options);
