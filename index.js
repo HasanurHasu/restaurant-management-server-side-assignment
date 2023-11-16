@@ -71,6 +71,16 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/topFoods', async (req, res) => {
+            const query = {};
+            const options = {
+                sort: { totalOrder: -1 }
+            }
+            const cursor = foodsCollection.find(query, options);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
         app.get('/allFoots', async (req, res) => {
             const page = parseInt(req.query.page);
             const size = parseInt(req.query.size);
@@ -129,9 +139,15 @@ async function run() {
             res.send(result);
         })
 
+        app.delete('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await cardCollection.deleteOne(query);
+            res.send(result)
+        })
+
         app.delete('/foods/:id', async (req, res) => {
             const id = req.params.id;
-            console.log(id);
             const query = { _id: new ObjectId(id) };
             const result = await foodsCollection.deleteOne(query);
             res.send(result);
