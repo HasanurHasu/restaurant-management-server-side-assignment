@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cookieParser = require('cookie-parser')
 require('dotenv').config()
@@ -28,26 +29,25 @@ const client = new MongoClient(uri, {
 
 // middlewares
 
-const logger = async(req, res, next) => {
-    console.log('called:', req.host, req.originalUrl);
+const logger = async (req, res, next) => {
     next();
 }
 
-const verifyToken = async(req, res, next) => {
+const verifyToken = async (req, res, next) => {
     const token = req.cookies?.token;
     console.log(token);
-    if(!token){
-      return  res.status(401).send({message: 'Not Authorized'})
+    if (!token) {
+        return res.status(401).send({ message: 'Not Authorized' })
     }
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-        if(err){
-            return res.status(401).send({message: 'Unauthorized'})
+        if (err) {
+            return res.status(401).send({ message: 'Unauthorized' })
         }
         console.log('code is', decoded);
         req.user = decoded;
         next();
     })
-    
+
 }
 
 
@@ -60,7 +60,21 @@ async function run() {
         const cardCollection = client.db('restaurantManagement').collection('cards');
         const userCollection = client.db('restaurantManagement').collection('users');
 
-        app.post('/user', async(req, res) => {
+        // auth related api
+
+        app.post('/jwt', logger, async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+
+            res
+                .cookie('token', token, {
+                    httpOnly: true,
+                    secure: false
+                })
+                .send({ success: true })
+        })
+
+        app.post('/user', async (req, res) => {
             const user = req.body;
             const result = await userCollection.insertOne(user);
             res.send(result)
@@ -73,7 +87,10 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/myOrder', async (req, res) => {
+        app.get('/myOrder', logger, verifyToken, async (req, res) => {
+            if (req.query.email !== req.user.email) {
+                return res.status(401).send({ message: 'Not Authorized' })
+            }
             let query = {};
             if (req.query?.email) {
                 query = { email: req.query.email };
@@ -101,7 +118,10 @@ async function run() {
 
         })
 
-        app.get('/addedItems', async (req, res) => {
+        app.get('/addedItems',logger, verifyToken, async (req, res) => {
+            if (req.query.email !== req.user.email) {
+                return res.status(401).send({ message: 'Not Authorized' })
+            }
             let query = {};
             if (req.query?.email) {
                 query = { addByEmail: req.query.email };
